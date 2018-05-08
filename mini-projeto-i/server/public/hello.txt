@@ -1,0 +1,3 @@
+Êpa!
+Você acabou de pedir um arquivo .txt agora.
+Tem 3 linhas ao todo.
