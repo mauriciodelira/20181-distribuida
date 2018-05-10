@@ -81,7 +81,7 @@ public class LocalServer implements Runnable {
 
     return (
       String.format("\nHTTP/1.1 %s\n" +
-        "// Body content of the file\n" +
+        "\n// Body content of the file\n" +
         "%s", getFileStatus(filename), content)
     );
   }
