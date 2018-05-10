@@ -12,46 +12,40 @@ public class Main {
 
     public static void main(String[] args) {
         try {
-            Socket s = new Socket("10.0.154.243", 8000);
+            Socket socketDoServidor = new Socket("localhost", 33221);
             System.out.println("Passou no servidor");
 
+//            Inicia uma nova thread de leitura dos dados
+            DadosEntradaThread thread = new DadosEntradaThread(socketDoServidor);
+            new Thread(thread).start();
 
-            DataInputThread rt = new DataInputThread(s);
+//            Perceba que aqui só há o OutputStream, não há mais InputStream
+//              nessa classe (foi movida para DadosEntradaThread)
+            DataOutputStream outputStream = new DataOutputStream(socketDoServidor.getOutputStream());
 
-            new Thread(rt).start();
+//            Captura a mensagem que quero enviar para o servidor
+            String sendMsg = JOptionPane.showInputDialog("CLIENTE || enviar para servidor:");
 
-            DataOutputStream outputStream = new DataOutputStream(s.getOutputStream());
+            /*
+             * ENQUANTO...
+             *   O que eu digitar for diferente de "fim"
+             *   ... e ...
+             *   A conexão com o servidor estiver aberta
+             * fique lendo o que eu digitar...
+             * */
+            while(!socketDoServidor.isClosed())
+            {
+                outputStream.writeUTF("CLIENTE: " + sendMsg);
 
-            String sendMsg = JOptionPane.showInputDialog("Enviar msg:");
+                sendMsg = JOptionPane.showInputDialog("CLIENTE || enviar para servidor:");
 
-            while(!s.isClosed()) {
+                if(sendMsg == null || sendMsg.equalsIgnoreCase("fim"))
+                    socketDoServidor.close();
 
-                outputStream.writeUTF(sendMsg);
-
-                sendMsg = JOptionPane.showInputDialog("Enviar msg:");
             }
 
         } catch (IOException ex) {
             Logger.getLogger(Main.class.getName()).log(Level.SEVERE, null, ex);
         }
-
-//        try {
-//
-//            Socket s = new Socket(InetAddress.getByName("10.0.154.243"), 8000);
-//
-//
-//
-//            DataOutputStream dos = new DataOutputStream(s.getOutputStream());
-//            DataInputStream dis = new DataInputStream(s.getInputStream());
-//
-//            dos.writeUTF("testando");
-//
-//            String resp = dis.readUTF();
-//
-//            s.close();
-//
-//        } catch (IOException e) {
-//            Logger.getLogger(e.getMessage());
-//        }
     }
 }
