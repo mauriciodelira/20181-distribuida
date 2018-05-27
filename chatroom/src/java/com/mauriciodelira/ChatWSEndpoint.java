@@ -82,14 +82,11 @@ public class ChatWSEndpoint {
         renameUser(selectedRoom, actualUser, message.split(" ")[1]);
         break;
       case "send":
-        
         String[] messageParams = splitter.apply(message, 4);
-        System.out.println("-------------- MESSAGE PARAMS: "+messageParams[0]+","+messageParams.length);
         if(messageParams[1].equals("-u") && messageParams.length > 3) {
-          System.out.println("--- params: 0 "+messageParams[0]+" -1 "+messageParams[1]+" -2 "+messageParams[2]+" -3 "+messageParams[3]);
           sendPrivatelyTo(selectedRoom, actualUser, messageParams[2], messageParams[3]);
         } else {
-          sendToAll(selectedRoom, actualUser, splitter.apply(message, 2)[1]);
+          sendToAll(selectedRoom, actualUser, splitter.apply(message, 2)[1], true);
         }
         break;
       default:
@@ -125,13 +122,16 @@ public class ChatWSEndpoint {
       coll.put(renamedKey, oldUser.getValue());
       coll.remove(oldUser.getKey());
       sendTo(oldUser.getValue().getSession(), changedUsernameMessage(oldUser.getKey(), renamedKey, false, true));
+      sendToAll(coll, findBySession(coll, oldUser.getValue().getSession()), "[ "+oldUser.getKey()+" ] renomeou para: [ "+renamedKey+" ]", false);
+      broadcastCurrentUsers(coll);
     }
   }
 
-  private void sendToAll(Map<String, User> coll, Entry<String, User> actualUserEntry, String message) {
+  private void sendToAll(Map<String, User> coll, Entry<String, User> actualUserEntry, String message, boolean useDefaultMessage) {
     coll.entrySet().stream()
             .forEach(u -> 
-                    sendTo(u.getValue().getSession(), defaultMessage(actualUserEntry.getKey(), message, false)
+                    sendTo(u.getValue().getSession(), 
+                            useDefaultMessage ? defaultMessage(actualUserEntry.getKey(), message, false) : message
             ));
   }
 
@@ -139,8 +139,6 @@ public class ChatWSEndpoint {
     User userReceiver = coll.get(receiverUsername);
     User actualUser = actualUserEntry.getValue();
     
-    System.out.println("--- receiver: "+receiverUsername+" and msg: "+message);
-
     if (userReceiver != null && userReceiver.getSession().isOpen()) {
       sendTo(userReceiver.getSession(), defaultMessage(actualUserEntry.getKey(), message, true));
       sendTo(actualUser.getSession(), defaultMessage(actualUserEntry.getKey(), message, true));
@@ -213,7 +211,7 @@ public class ChatWSEndpoint {
 
   private String setAsString(Set<String> s) {
     return s.stream()
-            .collect(Collectors.joining("; ", "online-users: {", "}"));
+            .collect(Collectors.joining("'; '", "{ 'online-users': ['", "'] }"));
   }
 
   private void broadcastCurrentUsers(Map<String, User> room) {
