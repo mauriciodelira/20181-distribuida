@@ -8,6 +8,10 @@
 *.tar.gz
 *.rar
 hs_err_pid*
-/chatroom/nbproject/private/
-/chatroom/build/
-/chatroom/dist/
+*/nbproject/private/
+*/build/
+*/nbbuild/
+*/dist/
+*/nbdist/
+*/.nb-gradle/
+*/nbactions.xml
