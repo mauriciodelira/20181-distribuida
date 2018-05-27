@@ -36,7 +36,7 @@ public class ChatWSEndpoint {
 
   // room-name: { username: { first-username, user-session } };
   private static Map<String, Map<String, User>> rooms = Collections.synchronizedMap(new HashMap<>());
-  private static final String CHAT_DOCS = "Você pode tentar:\n"
+  private static final String CHAT_DOCS = "doc::Você pode tentar:\n"
           + "send [mensagem]\t\t\tEnviar mensagem para todos no chat.\n"
           + "send -u [usuario] [mensagem]\t\t\tEnviar mensagem privada.\n"
           + "rename [novo-usuario]\t\t\tRenomear seu usuário na sala.";
@@ -90,7 +90,7 @@ public class ChatWSEndpoint {
         }
         break;
       default:
-        sendTo(sess, "Operação não suportada.\n" + CHAT_DOCS);
+        sendTo(sess, "err::Operação não suportada.\n" + CHAT_DOCS);
         break;
     }
   }
@@ -99,7 +99,7 @@ public class ChatWSEndpoint {
    * Creates the default message to be sent from a user to another user
    */
   private String defaultMessage(String sentBy, String message, boolean isPrivate) {
-    return sentBy + " às "
+    return "msg::" + sentBy + " às "
             + new SimpleDateFormat("HH:mm").format(Calendar.getInstance().getTimeInMillis())
             + (isPrivate ? " reservadamente: " : ": ")
             + message;
@@ -122,7 +122,7 @@ public class ChatWSEndpoint {
       coll.put(renamedKey, oldUser.getValue());
       coll.remove(oldUser.getKey());
       sendTo(oldUser.getValue().getSession(), changedUsernameMessage(oldUser.getKey(), renamedKey, false, true));
-      sendToAll(coll, findBySession(coll, oldUser.getValue().getSession()), "[ "+oldUser.getKey()+" ] renomeou para: [ "+renamedKey+" ]", false);
+      sendToAll(coll, findBySession(coll, oldUser.getValue().getSession()), "info::[ "+oldUser.getKey()+" ] renomeou para: [ "+renamedKey+" ]", false);
       broadcastCurrentUsers(coll);
     }
   }
@@ -143,7 +143,7 @@ public class ChatWSEndpoint {
       sendTo(userReceiver.getSession(), defaultMessage(actualUserEntry.getKey(), message, true));
       sendTo(actualUser.getSession(), defaultMessage(actualUserEntry.getKey(), message, true));
     } else {
-      sendTo(actualUser.getSession(), "Usuário [ " + receiverUsername + " ] não encontrado.");
+      sendTo(actualUser.getSession(), "err::Usuário [ " + receiverUsername + " ] não encontrado.");
     }
   }
 
@@ -162,7 +162,7 @@ public class ChatWSEndpoint {
    */
   private boolean sendTo(Map<String, User> coll, String username, String msg) throws NotFoundException {
     if (!coll.containsKey(username)) {
-      throw new NotFoundException("Não foi possível encontrar o usuário [ " + username + " ].");
+      throw new NotFoundException("err::Não foi possível encontrar o usuário [ " + username + " ].");
     }
 
     return sendTo(coll.get(username).getSession(), msg);
@@ -186,7 +186,7 @@ public class ChatWSEndpoint {
   }
 
   private String changedUsernameMessage(String oldUsername, String newUsername, boolean notAvailable, boolean hasChanged) {
-    String finalMessage = "";
+    String finalMessage = "info::";
 
     if (notAvailable) {
       finalMessage = finalMessage.concat("O usuário [ " + oldUsername + " ] não está disponível.\n");
@@ -218,7 +218,7 @@ public class ChatWSEndpoint {
     try {
       for (Entry<String, User> e : room.entrySet()) {
         e.getValue().getSession().getBasicRemote()
-                .sendText(setAsString(room.keySet()));
+                .sendText("usrs::" + setAsString(room.keySet()));
       }
     } catch (IOException ex) {
       Logger.getLogger(ChatWSEndpoint.class.getName()).log(Level.SEVERE, null, ex);
