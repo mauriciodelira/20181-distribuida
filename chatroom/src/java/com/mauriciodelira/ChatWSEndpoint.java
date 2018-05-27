@@ -22,6 +22,8 @@ import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Map.Entry;
 import java.util.Set;
+import java.util.function.BiFunction;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 import javax.ws.rs.NotFoundException;
 
@@ -70,19 +72,25 @@ public class ChatWSEndpoint {
   public void onMessage(String message, Session sess, @PathParam("room") String room) {
     Map<String, User> selectedRoom = ChatWSEndpoint.rooms.get(room);
     Entry<String, User> actualUser = findBySession(selectedRoom, sess);
+    BiFunction<String, Integer, String[]> splitter = (xmsg, xmax) -> xmsg.split(" ", xmax);
 
-    switch (message.split(" ")[0]) {
+    switch (splitter.apply(message, 2)[0]) {
       case "help":
         sendTo(sess, CHAT_DOCS);
         break;
       case "rename":
         renameUser(selectedRoom, actualUser, message.split(" ")[1]);
         break;
-      case "send -u":
-        sendPrivatelyTo(selectedRoom, actualUser, message.split(" ")[2], message.split(" ")[2]);
-        break;
       case "send":
-        sendToAll(selectedRoom, actualUser, message.split(" ")[1]);
+        
+        String[] messageParams = splitter.apply(message, 4);
+        System.out.println("-------------- MESSAGE PARAMS: "+messageParams[0]+","+messageParams.length);
+        if(messageParams[1].equals("-u") && messageParams.length > 3) {
+          System.out.println("--- params: 0 "+messageParams[0]+" -1 "+messageParams[1]+" -2 "+messageParams[2]+" -3 "+messageParams[3]);
+          sendPrivatelyTo(selectedRoom, actualUser, messageParams[2], messageParams[3]);
+        } else {
+          sendToAll(selectedRoom, actualUser, splitter.apply(message, 2)[1]);
+        }
         break;
       default:
         sendTo(sess, "Operação não suportada.\n" + CHAT_DOCS);
@@ -130,12 +138,14 @@ public class ChatWSEndpoint {
   private void sendPrivatelyTo(Map<String, User> coll, Entry<String, User> actualUserEntry, String receiverUsername, String message) {
     User userReceiver = coll.get(receiverUsername);
     User actualUser = actualUserEntry.getValue();
+    
+    System.out.println("--- receiver: "+receiverUsername+" and msg: "+message);
 
     if (userReceiver != null && userReceiver.getSession().isOpen()) {
       sendTo(userReceiver.getSession(), defaultMessage(actualUserEntry.getKey(), message, true));
       sendTo(actualUser.getSession(), defaultMessage(actualUserEntry.getKey(), message, true));
     } else {
-      sendTo(actualUser.getSession(), "Usuário [ " + message + " ] não encontrado.");
+      sendTo(actualUser.getSession(), "Usuário [ " + receiverUsername + " ] não encontrado.");
     }
   }
 
