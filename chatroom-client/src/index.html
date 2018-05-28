@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>WS Chat</title>
+
+  <!-- <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0-beta/css/materialize.min.css"> -->
+  <link rel="stylesheet" href="css/custom.css">
+
+</head>
+<body>
+
+  <section id="setup">
+    <input type="text" id="form-ip">
+    <input type="text" id="form-port">
+    <input type="text" id="form-room">
+    <input type="text" id="form-username">
+    <button id="connect">Conectar</button><br>
+    <p id="connection-status"></p>
+  </section>
+
+
+  <div>
+    <ul id="messages" class="scrollable-list"></ul>
+  </div>
+
+  <section class="send-message-form">
+    <input type="text" name="message" id="message">
+    <button class="btn btn-small" id="send-message">Enviar</button>
+  </section>
+
+  <!-- <div class="container">
+    <h1 class="header">WS Chat</h1>
+
+    <section id="setup">
+      <div class="row" style="padding-top: 25px;">
+        <div class="col s6">
+          <code>ws://</code>
+          <div class="input-field inline">
+            <input value="127.0.0.1" type="text" name="wsip" id="wsip">
+          </div>
+        </div>
+        <div class="col s6">
+          <code>port: </code>
+          <div class="input-field inline">
+            <input value="8080" type="text" name="port" id="port">
+          </div>
+        </div>
+      </div>
+      <div class="row">
+        <div class="col s6">
+          <code>username: </code>
+          <div class="input-field inline">
+            <input type="text" name="username" id="username">
+          </div>
+        </div>
+        <div class="col s6">
+          <code>room: </code>
+          <div class="input-field inline">
+            <input type="text" name="room" id="room">
+          </div>
+        </div>
+      </div>
+  </section>
+  
+  <aside style="border: 1px solid red;">
+
+  </aside>
+  </div> -->
+  
+  <script src="https://code.jquery.com/jquery-1.11.1.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0-beta/js/materialize.min.js"></script>
+  <script src="js/websocket.js"></script>
+</body>
+</html>

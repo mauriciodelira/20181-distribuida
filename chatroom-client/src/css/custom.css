@@ -1,0 +1,49 @@
+section.send-message-form {
+  background: #000;
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  padding:8px .5%;
+}
+
+section.send-message-form > input {
+  width: 80%;
+}
+
+.scrollable-list {
+
+  margin-bottom: 7em;
+  overflow: hidden;
+  overflow-y: scroll;
+}
+
+.chat-message {
+  list-style: none;
+  background: #eee;
+  padding: .75em 2em;
+  margin: .5em;
+  border-radius: 8px;
+}
+
+.chat-bubble-private {
+  background: #d0d0d0;
+  font-style: italic;
+}
+
+.chat-info {
+  text-align: center;
+  width: 50%;
+  margin: 0 auto;
+  font-family: 'Roboto Mono', monospace;
+  background: #d0d0d0;
+  color: #000000ee;
+}
+
+.chat-documentation {
+  text-align: center;
+  width: 65%;
+  margin: 0 auto;
+  font-family: 'Roboto Mono', monospace;
+  color: blue;
+}
