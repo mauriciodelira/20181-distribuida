@@ -134,7 +134,7 @@ class WebsocketComponent extends React.Component {
         break
         
       case "info":
-        console.debug("INFORMAÇÕES: ", splitted[1])
+        this.addMessage(splitted[1])
         break
   
       case "doc":
