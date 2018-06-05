@@ -82,8 +82,11 @@ class WebsocketComponent extends React.Component {
     }))
   }
 
+  showInfoAlert = (info) => {
+    alert(info)
+  }
+
   sendMessage = (message) => {
-    console.log("MESSAGE TO BE SENT: ", message)
     if(message !== undefined && message !== "")
       this.state.websocket.send(message)
   }
@@ -131,18 +134,18 @@ class WebsocketComponent extends React.Component {
         break
         
       case "info":
-        this.addMessage(splitted[1])
         console.debug("INFORMAÇÕES: ", splitted[1])
         break
   
       case "doc":
         const docs = parseJsonWithQuotes(splitted[1])
-  
+      
+        this.showInfoAlert(JSON.stringify(docs), "docs")
         console.log(JSON.stringify(docs), "docs")
         break
   
       default:
-        console.debug("caiu em nada")
+        console.debug("caiu em nada. mensagem recebida: ", message)
         break
     }
   }
