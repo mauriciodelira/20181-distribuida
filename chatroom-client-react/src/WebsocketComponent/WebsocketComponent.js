@@ -15,6 +15,7 @@ class WebsocketComponent extends React.Component {
     super(props)
 
     this.state = {
+      isInputDisabled: true,
       websocket: null,
       users: [],
       rooms: [],
@@ -50,7 +51,9 @@ class WebsocketComponent extends React.Component {
   }
 
   onWSOpen = (openedWS) => {
+    this.clearMessages()
     this.setState({
+      isInputDisabled: false,
       connectionStatus: 'Conectado',
       connectButtonText: 'Desconectar',
     })
@@ -58,6 +61,7 @@ class WebsocketComponent extends React.Component {
 
   onWSClose = (closedWS) => {
     this.setState({
+      isInputDisabled: true,
       connectionStatus: 'Desconectado',
       connectButtonText: 'Entrar na sala',
     })
@@ -79,7 +83,9 @@ class WebsocketComponent extends React.Component {
   }
 
   sendMessage = (message) => {
-    this.state.websocket.send(message)
+    console.log("MESSAGE TO BE SENT: ", message)
+    if(message !== undefined && message !== "")
+      this.state.websocket.send(message)
   }
 
   setRooms = (newRooms) => {
@@ -112,12 +118,12 @@ class WebsocketComponent extends React.Component {
         break
         
       case "err":
-        console.log(splitted[1], "error")
+        this.addMessage(splitted[1])
+        console.error(splitted[1])
         break
   
       case "msg":
         this.addMessage(splitted[1])
-        console.log(splitted[1], "message")
         break
   
       case "priv-msg":
@@ -125,18 +131,18 @@ class WebsocketComponent extends React.Component {
         break
         
       case "info":
-        console.log(splitted[1], "info")
+        this.addMessage(splitted[1])
+        console.debug("INFORMAÇÕES: ", splitted[1])
         break
   
       case "doc":
         const docs = parseJsonWithQuotes(splitted[1])
-        console.log(docs)
   
         console.log(JSON.stringify(docs), "docs")
         break
   
       default:
-        console.log("caiu em nada")
+        console.debug("caiu em nada")
         break
     }
   }
@@ -150,19 +156,25 @@ class WebsocketComponent extends React.Component {
         connectionStatus={this.state.connectionStatus}
         />
 
-      <section className="sidebar left">
-        <WSChatRooms rooms={this.state.rooms} />
-      </section>
-      
-      <main className="main-chat">
-        <WSChat messages={this.state.messages} />
-        <WSSendInput messages={this.state.messages} 
-          sendAction={this.sendMessage} />
-      </main>
+      <div className="container-fluid">
+        <div className="row">
+          <section className="sidebar left col-3">
+            <WSChatRooms rooms={this.state.rooms} />
+          </section>
+          
+          <main className="main-chat col-6">
+            <WSChat messages={this.state.messages} />
+            <WSSendInput messages={this.state.messages} 
+              clearChat={this.clearMessages}
+              isInputDisabled={this.state.isInputDisabled}
+              sendAction={this.sendMessage} />
+          </main>
 
-      <section className="sidebar right">
-        <WSOnlineUsers users={this.state.users} />
-      </section>
+          <section className="sidebar right col-3">
+            <WSOnlineUsers users={this.state.users} />
+          </section>
+        </div>
+      </div>
     </Fragment>
     )
   }

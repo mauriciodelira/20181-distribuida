@@ -15,7 +15,7 @@ class App extends Component {
     return (
       <div>
         <header className="App-header">
-          <h1 className="App-title">WeShacket</h1>
+          <h1 className="App-title">Websocket Chat</h1>
         </header>
 
         <WebsocketComponent />

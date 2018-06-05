@@ -7,18 +7,22 @@ export default function WSOnlineUsers(props) {
     color: #988F91;
     background-color: #211E2D;
     text-align: center;
-    padding: 1em;
-    margin-top: 0;
+    font-size: 1.2rem;
+    padding: 1rem;
+    margin-top: 1rem;
     margin-bottom: 0;
-    z-index: 2;
+    border-top-left-radius: 10px;
+    border-top-right-radius: 10px;
   `;
 
   const Ul = styled.ul`
     background-color: #6B618B;
     margin: 0;
     padding: 1em;
-    min-height: 10em;
+    min-height: 280px;
     z-index: 1;
+    border-bottom-left-radius: 10px;
+    border-bottom-right-radius: 10px;
   `
 
   const Li = styled.li`
@@ -35,7 +39,7 @@ export default function WSOnlineUsers(props) {
 
   return (
     <aside>
-      <H3>online users</H3>
+      <H3>Usuários na sala</H3>
       <Ul>{listItems}</Ul>
     </aside>
   );

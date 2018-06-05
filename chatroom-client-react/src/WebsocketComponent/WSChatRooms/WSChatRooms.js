@@ -7,9 +7,12 @@ export default function WSChatRoom(props) {
     color: #a7daaf;
     background-color: #2e403d;
     text-align: center;
+    font-size: 1.3rem;
     padding: 1em;
-    margin-top: 0;
+    margin-top: 1rem;
     margin-bottom: 0;
+    border-top-left-radius: 10px;
+    border-top-right-radius: 10px;
   `
 
   const Ul = styled.ul`
@@ -17,7 +20,9 @@ export default function WSChatRoom(props) {
     padding: 1em;
     margin-top: 0;
     margin-bottom: 0;
-    min-height: 10em;
+    border-bottom-left-radius: 10px;
+    border-bottom-right-radius: 10px;
+    min-height: 280px;
   `
 
   const Li = styled.li`

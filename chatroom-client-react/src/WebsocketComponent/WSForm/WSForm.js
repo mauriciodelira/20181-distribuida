@@ -9,7 +9,7 @@ class WSForm extends Component {
         ip: '127.0.0.1',
         port: '8080',
         room: 'geral',
-        user: 'vanjie',
+        user: 'usuario',
       },
     }
 
@@ -39,32 +39,51 @@ class WSForm extends Component {
   render() {
     return (
       <Fragment>
-        <aside style={{border: '1px solid blue', background: 'lightblue'}}>
+      <aside className="container" style={{marginTop: 16}}>
+        <div className="row">
           <form onSubmit={this.handleSubmit}>
-            <input type="text" name="ip" 
-              value={this.state.formFields.ip} 
-              onChange={this.handleChange}
-              />
+            <div className="form-row">
+              <div className="col-2">
+                <input type="text" name="ip" className="form-control"
+                  value={this.state.formFields.ip} 
+                  onChange={this.handleChange}
+                  required
+                  />
+              </div>
 
-            <input type="text" name="port" 
-              value={this.state.formFields.port}
-              onChange={this.handleChange}
-              />
+              <div className="col-2">
+                <input type="text" name="port" className="form-control"
+                  value={this.state.formFields.port}
+                  onChange={this.handleChange}
+                  required
+                  />
+              </div>
 
-            <input type="text" name="room" 
-              value={this.state.formFields.room} 
-              onChange={this.handleChange}
-              />
+              <div className="col-3">
+                <input type="text" name="room" className="form-control"
+                  value={this.state.formFields.room} 
+                  onChange={this.handleChange}
+                  required
+                  />
+              </div>
 
-            <input type="text" name="user" 
-              value={this.state.formFields.user} 
-              onChange={this.handleChange}
-              />
+              <div className="col-3">
+                <input type="text" name="user" className="form-control"
+                  value={this.state.formFields.user} 
+                  onChange={this.handleChange}
+                  required
+                  />
+              </div>
 
-            <button onClick={this.handleSubmit}>{this.props.connectButtonText}</button>
+              <div className="col-2">
+                <button className="btn btn-primary" onClick={this.handleSubmit}>{this.props.connectButtonText}</button>
+              </div>
+            </div>
+
           </form>
           <code className="connection-status">{this.props.connectionStatus}</code>
-        </aside>
+        </div>
+      </aside>
       </Fragment>
     )
   }

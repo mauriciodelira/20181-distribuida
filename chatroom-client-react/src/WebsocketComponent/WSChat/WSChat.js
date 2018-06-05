@@ -3,20 +3,23 @@ import '../WebsocketComponent.css'
 import styled from "styled-components";
 
 function WSChat(props) {
-  console.log("WSChat props:", props)
 
   const listMessages = props.messages.map((m) => 
     <li className="chat-message">{m}</li>
   )
 
   const Ul = styled.ul`
-    overflow: hidden;
+    margin: 1rem;
+    overflow-x: hidden;
     overflow-y: scroll;
+    min-height: 280px;
+    max-height: 280px;
+    position: relative;
   `
 
   return (
     <Fragment>
-      <ul>{listMessages}</ul>
+      <Ul>{listMessages}</Ul>
     </Fragment>
   )
 }

@@ -1,7 +1,5 @@
 .sidebar {
   margin: 0;
-  min-width: 25%;
-  border: 1px solid green;
 }
 
 .left {
@@ -13,8 +11,6 @@
 }
 
 .main-chat {
-  border: 1px solid red;
   float: left;
-  width: 50%;
   margin: 0;
 }
