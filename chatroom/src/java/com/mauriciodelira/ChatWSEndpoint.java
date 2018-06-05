@@ -23,8 +23,8 @@ import java.util.Calendar;
 import java.util.Map.Entry;
 import java.util.Set;
 import java.util.function.BiFunction;
-import java.util.function.Function;
 import java.util.stream.Collectors;
+import javax.websocket.OnError;
 import javax.ws.rs.NotFoundException;
 
 /**
@@ -35,42 +35,47 @@ import javax.ws.rs.NotFoundException;
 public class ChatWSEndpoint {
 
   // room-name: { username: { first-username, user-session } };
-  private static Map<String, Map<String, User>> rooms = Collections.synchronizedMap(new HashMap<>());
-  private static final String CHAT_DOCS = "doc::Você pode tentar:\n"
-          + "send [mensagem]\t\t\tEnviar mensagem para todos no chat.\n"
-          + "send -u [usuario] [mensagem]\t\t\tEnviar mensagem privada.\n"
-          + "rename [novo-usuario]\t\t\tRenomear seu usuário na sala.";
+  private static Map<String, Map<String, User>> chatrooms = Collections.synchronizedMap(new HashMap<>());
+  private static final String CHAT_DOCS = "doc::{ \"availableOptions\": {"
+          + "\"send [mensagem]\": \"Enviar mensagem para todos no chat\","
+          + "\"send -u [usuario] [mensagem]\": \"Enviar mensagem privada\","
+          + "\"rename [novo-usuario]\": \"Renomear seu usuário na sala\" } }";
 
   @OnOpen
   public void onOpen(Session sess, @PathParam("room") String room, @PathParam("username") String username) {
     User newUser = new User(username, sess);
 
-    if (ChatWSEndpoint.rooms.containsKey(room) && ChatWSEndpoint.rooms.get(room) != null) {
-      Map<String, User> selectedRoom = ChatWSEndpoint.rooms.get(room);
+    if (ChatWSEndpoint.chatrooms.containsKey(room) && ChatWSEndpoint.chatrooms.get(room) != null) {
+      Map<String, User> selectedRoom = ChatWSEndpoint.chatrooms.get(room);
 
-      if (selectedRoom.containsKey(username)) {
+      if (selectedRoom != null && selectedRoom.containsKey(username)) {
 //        Takes a default username
         String newUsername = defaultUsername(selectedRoom, username);
 
 //        Puts user in selected room
         selectedRoom.putIfAbsent(newUsername, newUser);
 
-        sendTo(selectedRoom, newUsername, changedUsernameMessage(username, newUsername, true, true));
+//        Sends him his new username
+        sendTo(selectedRoom, newUsername, changedUsernameMessage(username, newUsername, true, false));
 
       } else {
+//        Adds user to selected room
         selectedRoom.putIfAbsent(username, newUser);
       }
+//      Send to user available rooms
+      sendTo(sess, getCurrentRooms(ChatWSEndpoint.chatrooms));
     } else {
-//      Creates a new room
-      initEmptyRoom(room).putIfAbsent(username, newUser);
+//      Creates a new room with the user
+      initEmptyRoom(room).put(username, newUser);
+//      Tell everyone that a new room has been created
+      broadcastCurrentRooms(ChatWSEndpoint.chatrooms);
     }
-
-    broadcastCurrentUsers(ChatWSEndpoint.rooms.get(room));
+    broadcastCurrentUsers(ChatWSEndpoint.chatrooms.get(room));
   }
 
   @OnMessage
   public void onMessage(String message, Session sess, @PathParam("room") String room) {
-    Map<String, User> selectedRoom = ChatWSEndpoint.rooms.get(room);
+    Map<String, User> selectedRoom = ChatWSEndpoint.chatrooms.get(room);
     Entry<String, User> actualUser = findBySession(selectedRoom, sess);
     BiFunction<String, Integer, String[]> splitter = (xmsg, xmax) -> xmsg.split(" ", xmax);
 
@@ -78,19 +83,23 @@ public class ChatWSEndpoint {
       case "help":
         sendTo(sess, CHAT_DOCS);
         break;
+      case "rooms":
+        sendTo(sess, getCurrentRooms(ChatWSEndpoint.chatrooms));
+        break;
       case "rename":
         renameUser(selectedRoom, actualUser, message.split(" ")[1]);
         break;
       case "send":
         String[] messageParams = splitter.apply(message, 4);
-        if(messageParams[1].equals("-u") && messageParams.length > 3) {
+        if (messageParams[1].equals("-u") && messageParams.length > 3) {
           sendPrivatelyTo(selectedRoom, actualUser, messageParams[2], messageParams[3]);
         } else {
           sendToAll(selectedRoom, actualUser, splitter.apply(message, 2)[1], true);
         }
         break;
       default:
-        sendTo(sess, "err::Operação não suportada.\n" + CHAT_DOCS);
+        sendTo(sess, "err::Operação não suportada.");
+        sendTo(sess, CHAT_DOCS);
         break;
     }
   }
@@ -99,7 +108,7 @@ public class ChatWSEndpoint {
    * Creates the default message to be sent from a user to another user
    */
   private String defaultMessage(String sentBy, String message, boolean isPrivate) {
-    return "msg::" + sentBy + " às "
+    return (isPrivate ? "priv-msg::" : "msg::") + sentBy + " às "
             + new SimpleDateFormat("HH:mm").format(Calendar.getInstance().getTimeInMillis())
             + (isPrivate ? " reservadamente: " : ": ")
             + message;
@@ -107,7 +116,7 @@ public class ChatWSEndpoint {
 
   @OnClose
   public void onClose(Session sess, @PathParam("room") String room, @PathParam("username") String user) {
-    Map<String, User> selectedRoom = ChatWSEndpoint.rooms.get(room);
+    Map<String, User> selectedRoom = ChatWSEndpoint.chatrooms.get(room);
 
     selectedRoom.entrySet().removeIf(e -> e.getValue().getSession() == sess);
 
@@ -117,33 +126,38 @@ public class ChatWSEndpoint {
   private void renameUser(Map<String, User> coll, Entry<String, User> oldUser, String renamedKey) {
     if (coll.containsKey(renamedKey)) {
       // User already exists.
-      sendTo(oldUser.getValue().getSession(), changedUsernameMessage(oldUser.getKey(), renamedKey, true, false));
+      sendTo(oldUser.getValue().getSession(), changedUsernameMessage(oldUser.getKey(), renamedKey, true, true));
     } else {
       coll.put(renamedKey, oldUser.getValue());
       coll.remove(oldUser.getKey());
-      sendTo(oldUser.getValue().getSession(), changedUsernameMessage(oldUser.getKey(), renamedKey, false, true));
-      sendToAll(coll, findBySession(coll, oldUser.getValue().getSession()), "info::[ "+oldUser.getKey()+" ] renomeou para: [ "+renamedKey+" ]", false);
+      sendTo(oldUser.getValue().getSession(), changedUsernameMessage(oldUser.getKey(), renamedKey, false, false));
+      sendToAll(coll, findBySession(coll, oldUser.getValue().getSession()), "info::Usuário: [ " + oldUser.getKey() + " ] renomeou para: [ " + renamedKey + " ]", false);
       broadcastCurrentUsers(coll);
     }
+  }
+  
+  @OnError
+  public void onError(Throwable t, Session sess) {
+    sendTo(sess, "err::Ocorreu um erro. Entre em contato com os administradores, informando o ocorrido a seguir:\n" + t.getMessage());
   }
 
   private void sendToAll(Map<String, User> coll, Entry<String, User> actualUserEntry, String message, boolean useDefaultMessage) {
     coll.entrySet().stream()
-            .forEach(u -> 
-                    sendTo(u.getValue().getSession(), 
-                            useDefaultMessage ? defaultMessage(actualUserEntry.getKey(), message, false) : message
+            .forEach(u
+                    -> sendTo(u.getValue().getSession(),
+                    useDefaultMessage ? defaultMessage(actualUserEntry.getKey(), message, false) : message
             ));
   }
 
   private void sendPrivatelyTo(Map<String, User> coll, Entry<String, User> actualUserEntry, String receiverUsername, String message) {
     User userReceiver = coll.get(receiverUsername);
     User actualUser = actualUserEntry.getValue();
-    
+
     if (userReceiver != null && userReceiver.getSession().isOpen()) {
       sendTo(userReceiver.getSession(), defaultMessage(actualUserEntry.getKey(), message, true));
       sendTo(actualUser.getSession(), defaultMessage(actualUserEntry.getKey(), message, true));
     } else {
-      sendTo(actualUser.getSession(), "err::Usuário [ " + receiverUsername + " ] não encontrado.");
+      sendTo(actualUser.getSession(), "err::Usuário não encontrado: [ " + receiverUsername + " ].");
     }
   }
 
@@ -162,7 +176,7 @@ public class ChatWSEndpoint {
    */
   private boolean sendTo(Map<String, User> coll, String username, String msg) throws NotFoundException {
     if (!coll.containsKey(username)) {
-      throw new NotFoundException("err::Não foi possível encontrar o usuário [ " + username + " ].");
+      throw new NotFoundException("err::Usuário não encontrado: [ " + username + " ].");
     }
 
     return sendTo(coll.get(username).getSession(), msg);
@@ -181,24 +195,18 @@ public class ChatWSEndpoint {
   }
 
   private Map<String, User> initEmptyRoom(String room) {
-    ChatWSEndpoint.rooms.put(room, Collections.synchronizedMap(new HashMap<>()));
-    return ChatWSEndpoint.rooms.get(room);
+    ChatWSEndpoint.chatrooms.put(room, Collections.synchronizedMap(new HashMap<>()));
+    return ChatWSEndpoint.chatrooms.get(room);
   }
 
-  private String changedUsernameMessage(String oldUsername, String newUsername, boolean notAvailable, boolean hasChanged) {
+  private String changedUsernameMessage(String beforeRename, String afterRename, boolean notAvailable, boolean sameAsBefore) {
     String finalMessage = "info::";
 
-    if (notAvailable) {
-      finalMessage = finalMessage.concat("O usuário [ " + oldUsername + " ] não está disponível.\n");
-    }
-    if (hasChanged) {
-      finalMessage = finalMessage.concat("Seu novo usuário é: [ " + newUsername + " ].\n");
-      finalMessage = finalMessage.concat("Para alterá-lo novamente, envie uma mensagem "
-              + "no padrão \"rename [novo-usuário]\"\n");
-    } else {
-      finalMessage = finalMessage.concat("Seu usuário é: [ " + oldUsername + " ].");
-    }
-
+    if (notAvailable)
+      finalMessage = finalMessage.concat("Usuário não disponível: [ " + (sameAsBefore ? afterRename : beforeRename) + " ]. ");
+    
+    finalMessage = finalMessage.concat("Seu usuário é: [ " + (sameAsBefore ? beforeRename : afterRename) + " ].\n");
+    
     return finalMessage;
   }
 
@@ -209,19 +217,26 @@ public class ChatWSEndpoint {
             .get();
   }
 
-  private String setAsString(Set<String> s) {
+  private String setAsString(String jsonKey, Set<String> s) {
     return s.stream()
-            .collect(Collectors.joining("'; '", "{ 'online-users': ['", "'] }"));
+            .collect(Collectors.joining("\", \"", "{ \"" + jsonKey + "\": [\"", "\"] }"));
+  }
+
+  private String getCurrentRooms(Map<String, Map<String, User>> baseColl) {
+    return "rooms::" + setAsString("available-rooms", baseColl.keySet());
+  }
+
+  private void broadcastCurrentRooms(Map<String, Map<String, User>> baseColl) {
+    baseColl.entrySet().forEach( (baseEntry) -> {
+      baseEntry.getValue().entrySet().forEach( (usr) -> {
+        sendTo(usr.getValue().getSession(), getCurrentRooms(baseColl));
+      });
+    });
   }
 
   private void broadcastCurrentUsers(Map<String, User> room) {
-    try {
-      for (Entry<String, User> e : room.entrySet()) {
-        e.getValue().getSession().getBasicRemote()
-                .sendText("usrs::" + setAsString(room.keySet()));
-      }
-    } catch (IOException ex) {
-      Logger.getLogger(ChatWSEndpoint.class.getName()).log(Level.SEVERE, null, ex);
-    }
+    room.entrySet().forEach((user) -> {
+      sendTo(user.getValue().getSession(), "users::" + setAsString("online-users", room.keySet()));
+    });
   }
 }
