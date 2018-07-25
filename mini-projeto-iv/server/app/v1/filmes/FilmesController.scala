@@ -1,7 +1,7 @@
 package v1.filmes
 
 import javax.inject.{Inject, Provider}
-import models.forms.CreateFilmeForm
+import models.forms.FilmeForms
 import models.{DuplicateKeyException, Filme, NotFoundException}
 import repositories.FilmeRepository
 import play.api.{Configuration, Logger}
@@ -29,13 +29,13 @@ class FilmesController @Inject()(repo: FilmeRepository,
     }
   }
 
-  // GET /id/xml?id=xxxxx > TODO: ver se deve ter um /xml ou /json no final para retornar ou JSON ou XML.
-  def showById(tipo: String = "json"): Action[AnyContent] = Action.async { implicit request =>
-    CreateFilmeForm.onlyIdForm.bindFromRequest.fold(
+  // GET /?id=x&type=json ou &type=xml > TODO: ver se deve ter um /xml ou /json no final para retornar ou JSON ou XML.
+  def showById: Action[AnyContent] = Action.async { implicit request =>
+    FilmeForms.idAndTypeForm.bindFromRequest.fold(
      withErrors => Future(BadRequest(withErrors.errorsAsJson)),
-     id => repo.findById(id).map{ maybeFilme =>
+      tupledForm => repo.findById(tupledForm._1).map{ maybeFilme =>
       maybeFilme.map{ filme =>
-        tipo.toLowerCase match {
+        tupledForm._2.toLowerCase match {
           case "json" => Ok(Json.toJson(filme))
           case "xml" => Ok(filmeToXml(createFilmeResponse(filme)))
           case _ => Ok(Json.toJson(filme))
@@ -96,7 +96,7 @@ class FilmesController @Inject()(repo: FilmeRepository,
 
   // POST /
   def create: Action[AnyContent] = Action.async{ implicit request =>
-    CreateFilmeForm.form.bindFromRequest.fold(
+    FilmeForms.createMovieForm.bindFromRequest.fold(
       withErrors => Future(BadRequest(withErrors.errorsAsJson)),
       form => {
         repo.create(form.titulo, form.diretor, form.estudio, form.genero, form.ano).map { filme =>
