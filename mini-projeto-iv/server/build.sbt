@@ -1,4 +1,4 @@
-name := """enterplay-api"""
+name := """filmeflix-api"""
 
 version := "2.0-SNAPSHOT"
 

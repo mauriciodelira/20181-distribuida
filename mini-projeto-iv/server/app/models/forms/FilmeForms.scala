@@ -12,15 +12,17 @@ case class FilmeForms(id: Option[Long],
                          )
 
 object FilmeForms {
+  def unapplyCreate: FilmeForms => Option[(String, String, String, String, Int)] = x =>
+    Option((x.titulo, x.diretor, x.estudio, x.genero, x.ano))
+
   val createMovieForm: Form[FilmeForms] = Form {
     mapping(
-      "id" -> optional(longNumber),
       "titulo" -> nonEmptyText,
       "diretor" -> nonEmptyText,
       "estudio" -> nonEmptyText,
       "genero" -> nonEmptyText,
       "ano" -> number
-    )(FilmeForms.apply)(FilmeForms.unapply)
+    )(FilmeForms.apply(None, _, _, _, _, _))(FilmeForms.unapplyCreate)
   }
 
   val onlyIdForm: Form[Long] = Form {

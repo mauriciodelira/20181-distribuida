@@ -36,9 +36,9 @@ class FilmesController @Inject()(repo: FilmeRepository,
       tupledForm => repo.findById(tupledForm._1).map{ maybeFilme =>
       maybeFilme.map{ filme =>
         tupledForm._2.toLowerCase match {
-          case "json" => Ok(Json.toJson(filme))
+          case "json" => Ok(Json.toJson(createFilmeResponse(filme)))
           case "xml" => Ok(filmeToXml(createFilmeResponse(filme)))
-          case _ => Ok(Json.toJson(filme))
+          case _ => Ok(Json.toJson(createFilmeResponse(filme)))
         }
       }.getOrElse(NotFound)
     }
@@ -130,7 +130,7 @@ class FilmesController @Inject()(repo: FilmeRepository,
   }
 
   private def filmeToXml(filme: FilmeResponse): Elem = {
-    <message>
+    <filme>
       <id>{filme.id}</id>
       <titulo>{filme.titulo}</titulo>
       <diretor>{filme.diretor}</diretor>
@@ -138,7 +138,7 @@ class FilmesController @Inject()(repo: FilmeRepository,
       <genero>{filme.genero}</genero>
       <ano>{filme.ano}</ano>
       <link>{filme.link}</link>
-    </message>
+    </filme>
   }
 
   private def filmeToHtml(filme: FilmeResponse) = {

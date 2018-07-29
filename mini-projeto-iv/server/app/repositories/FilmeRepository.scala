@@ -48,7 +48,7 @@ class FilmeRepository @Inject()(dbConfigProvider: DatabaseConfigProvider)(implic
              ano: Int,
             ): Future[Filme] = db.run {
     for {
-      exists <- table.filter(_.titulo like titulo).exists.result
+      exists <- table.filter(_.titulo.toLowerCase like titulo.toLowerCase).exists.result
       filme: Filme <- if (exists) throw DuplicateKeyException("Título já cadastrado")
       else {
 //      prepara a query, mapeando as colunas que vou inserir os dados
@@ -75,7 +75,7 @@ class FilmeRepository @Inject()(dbConfigProvider: DatabaseConfigProvider)(implic
 
   // daqui pra baixo, parametrizado na URL
   def findByTitulo(titulo: String): Future[Option[Filme]] = db.run {
-    table.filter(_.titulo.toLowerCase like titulo.toLowerCase).result.headOption
+    table.filter(_.titulo.toLowerCase like titulo.toLowerCase()).result.headOption
   }
 
   def findByAno(ano: Int): Future[Seq[Filme]] = db.run {
@@ -83,11 +83,13 @@ class FilmeRepository @Inject()(dbConfigProvider: DatabaseConfigProvider)(implic
   }
 
   def findByDiretor(diretor: String): Future[Seq[Filme]] = db.run {
-    table.filter(_.diretor.toLowerCase like diretor.toLowerCase).result
+    val searchDiretor = s"%${diretor.toLowerCase()}%"
+    table.filter(_.diretor.toLowerCase like searchDiretor).result
   }
 
   def findByGenero(genero: String): Future[Seq[Filme]] = db.run {
-    table.filter(_.genero.toLowerCase like genero.toLowerCase).result
+    val searchGenero = s"%${genero.toLowerCase()}%"
+    table.filter(_.genero.toLowerCase like searchGenero).result
   }
 
   def update(id: Long, novoTitulo: String): Future[Filme] = {
