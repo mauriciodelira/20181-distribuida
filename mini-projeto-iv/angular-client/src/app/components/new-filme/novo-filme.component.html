@@ -1,0 +1,40 @@
+<div class="card">
+  <div class="card-content">
+    <h4>Cadastrar filme</h4>
+    <div class="section">
+      <div class="row">
+        <div class="form-input col s12 m8">
+          <label for="titulo">Título: </label><input id="titulo" [(ngModel)]="titulo">
+        </div>
+      </div>
+      <div class="row">
+        <div class="form-input col s12 m8">
+          <label for="diretor">Diretor: </label><input id="diretor" [(ngModel)]="diretor">
+        </div>
+      </div>
+      <div class="row">
+        <div class="form-input col s12 m8">
+          <label for="genero">Gênero: </label><input id="genero" [(ngModel)]="genero">
+        </div>
+      </div>
+      <div class="row">
+        <div class="form-input col s12 m8">
+          <label for="estudio">Estúdio: </label><input id="estudio" [(ngModel)]="estudio">
+        </div>
+      </div>
+      <div class="row">
+        <div class="form-input col s12 m8">
+          <label for="ano">Ano: </label><input id="ano" type="number" [(ngModel)]="ano">
+        </div>
+      </div>
+      <div class="row">
+        <div class="form-input col s6 m2">
+          <button class="btn btn-small" (click)="cadastrarFilme()">Salvar</button>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="card-action">
+    <a (click)="gotoHome()" class="btn">Voltar</a>
+  </div>
+</div>

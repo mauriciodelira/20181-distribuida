@@ -1,0 +1,7 @@
+<ul class="collection">
+  <li *ngFor="let f of filmes" class="collection-item">
+    <div><strong>{{f.titulo}}</strong> | {{f.diretor}} | {{f.ano}}
+      <a [routerLink]="['/filme', f.id, 'xml']" class="secondary-content secondary-text">Ver mais</a>
+    </div>
+  </li>
+</ul>

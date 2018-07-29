@@ -1,0 +1,29 @@
+<div class="card">
+  <div class="card-content" *ngIf="selectedFilme">
+    <h4>{{selectedFilme.titulo}}</h4>
+    <div class="section">
+      <strong>ID: </strong>{{selectedFilme.id}}<br/>
+      <strong>Diretor: </strong>{{selectedFilme.diretor}}<br/>
+      <strong>Estúdio: </strong>{{selectedFilme.estudio}}<br/>
+      <strong>Gênero: </strong>{{selectedFilme.genero}}<br/>
+      <strong>Ano: </strong>{{selectedFilme.ano}}
+    </div>
+    <div class="section">
+      <h6>Atualizar título</h6>
+      <div class="row">
+        <div class="form-input col s12 m8">
+          <input [(ngModel)]="novoTitulo">
+        </div>
+        <div class="form-input col s6 m2">
+          <button class="btn btn-small" (click)="atualizarFilme()">Salvar</button>
+        </div>
+        <div class="form-input col s6 m2">
+          <button class="btn btn-small" (click)="deletarFilme()">Apagar</button>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="card-action">
+    <a (click)="gotoHome()" class="btn">Voltar</a>
+  </div>
+</div>
